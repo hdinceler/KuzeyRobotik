@@ -11,14 +11,14 @@
   void right_stop();
   void all_stop();
   void motor_test();
- bool zaman_say_milis(unsigned int zaman_say_interval  );
- bool zaman_say_micros(unsigned int zaman_say_interval  );
+  bool zaman_say_milis(unsigned int zaman_say_interval  );
+  bool zaman_say_micros(unsigned int zaman_say_interval  );
   void run_right( signed short speed);
   void run_left(  signed short speed);
   void alarm(uint8_t mesafe);
-uint8_t mesafe_olc();
-bool zaman_say_milis(unsigned int zaman_say_interval  );
-bool zaman_say_micros(unsigned int zaman_say_interval  );
+  uint8_t mesafe_olc();
+  bool zaman_say_milis(unsigned int zaman_say_interval  );
+  bool zaman_say_micros(unsigned int zaman_say_interval  );
 
 
 void alarm(uint8_t mesafe){
