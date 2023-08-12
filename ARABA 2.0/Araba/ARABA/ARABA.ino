@@ -7,8 +7,8 @@
 #define pin_L1 6 //~PWM
 #define pin_L2 9 //~PWM
 
-#define pin_far 2 //DIGITAL
-#define pin_korna 4 //DIGITAL
+#define pin_far A5 //DIGITAL
+#define pin_korna A4 //DIGITAL
 
 
 #include "araba_kutuphane.h"
