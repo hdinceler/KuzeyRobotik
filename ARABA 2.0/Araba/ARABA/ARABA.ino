@@ -56,20 +56,7 @@ void setup() {
 }
 
 void loop() {
-
-
-// //MESAFE ÖLÇÜM
-// unsigned long simdikiZaman = millis();
-//  if (simdikiZaman - sonOkumaZamani >= okumaAraligi) {
-//     int mesafe = mesafe_olc();
-    
-//     Serial.print("Mesafe: ");
-//     Serial.print(mesafe);
-//     Serial.println(" cm");
-    
-//     sonOkumaZamani = simdikiZaman;
-//   }
-
+ 
 //RADYO İLETİŞİM
   if (radio.available()) {
     
@@ -95,16 +82,11 @@ void loop() {
 
     Serial.print(mesafe);
      Serial.print(" cm--:\n");
-    // Serial.print(korna_durum);
-    // Serial.println(far_durum);
-
-    // Serial.print(" , korna:");
-    // Serial.print(korna_durum);
-    // Serial.println();
+   
     if( mesafe < yakinlik_siniri ){
       alarm( mesafe );
       all_stop();
-      // delay(50);
+      delay(50);
     }else {
       run_left(leftSpeed);
       run_right(rightSpeed);
