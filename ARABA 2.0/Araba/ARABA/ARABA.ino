@@ -7,17 +7,21 @@
 #define pin_L1 9 //~PWM
 #define pin_L2 6 //~PWM
 
-
 #define pin_far A5 //DIGITAL
 #define pin_korna A4 //DIGITAL
 
 //MESAFE ÖLÇÜM BİLDİRİMLERİ
-#define pin_mesafe_trig 2 //mesafe ölçümü sinyal gönderme (trigger) pini
-#define pin_mesafe_echo 4 //mesafe ölçümü sinyal alma (echo) piniunsigned long sonPulseZamani = 0;
-unsigned long baslangicZamani = 0;
-unsigned long sonPulseZamani = 0; // Global scope'da tanımlanan değişken
-const unsigned long maxMesafeZaman = 30000; // Maksimum mesafe ölçüm zamanı (us)
-int mesafe_cm = 0;
+int pin_mesafe_trig = 2;
+int pin_mesafe_echo = 4;
+#define yakinlik_siniri  10   // araba bu cm cinsinden degerden  daha yakın cisim algılarsa dursun
+#define pin_far A5 // DIGITAL
+#define pin_korna A4 // DIGITAL
+long zaman;
+long mesafe;
+unsigned long baslangic_zamani_millis=0;;
+unsigned long baslangic_zamani_micros=0;;
+// const unsigned long okumaAraligi = 1; // Okuma aralığı (milisaniye cinsinden)
+bool trigDurumu = false;
 
 
 #include "araba_kutuphane.h"
@@ -31,7 +35,6 @@ uint8_t korna_durum=0;
 char buff[10];
 char gelen_komut[32] = "";
 
-const unsigned long okumaAraligi = 1000; // Mesafe okuma aralığı (ms)
 
 void setup() {
   
@@ -88,22 +91,26 @@ void loop() {
     strcpy( buff , strtok(NULL,  "," ) );
     korna_durum= atoi(buff);
     
+    mesafe= mesafe_olc();
 
-    // Serial.print("left:");
-    // Serial.println(rightSpeed);
-    // Serial.print(" , right:");
-    // Serial.print(rightSpeed);
-    // Serial.print("  , far:");
-    Serial.println(korna_durum);
-    Serial.println(far_durum);;                                                                                                                                                                                  
+    Serial.print(mesafe);
+     Serial.print(" cm--:\n");
+    // Serial.print(korna_durum);
+    // Serial.println(far_durum);
+
     // Serial.print(" , korna:");
     // Serial.print(korna_durum);
     // Serial.println();
-
-    run_left(leftSpeed);
-    run_right(rightSpeed);
-    digitalWrite(pin_far,far_durum);
-    digitalWrite(pin_korna, korna_durum);
+    if( mesafe < yakinlik_siniri ){
+      alarm( mesafe );
+      all_stop();
+      // delay(50);
+    }else {
+      run_left(leftSpeed);
+      run_right(rightSpeed);
+      digitalWrite(pin_far,far_durum);
+      digitalWrite(pin_korna, korna_durum);
+    }
 
   } else   all_stop();
 }
