@@ -7,11 +7,14 @@
 #define pin_L1 6 //~PWM
 #define pin_L2 9 //~PWM
 
+#define pin_far 2 //DIGITAL
+#define pin_korna 4 //DIGITAL
+
+
 #include "araba_kutuphane.h"
 
 RF24 radio(7,8); // CE, CSN pimleri
-#define pin_far 2 //DIGITAL
-#define pin_korna 4 //DIGITAL
+
 
 signed short rightSpeed=0;
 signed short leftSpeed=0;
