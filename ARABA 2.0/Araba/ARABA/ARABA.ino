@@ -2,97 +2,60 @@
 #include "nRF24L01.h"
 #include "RF24.h"
 
-#define pin_R1 3 //~PWM
-#define pin_R2 5 //~PWM
-#define pin_L1 9 //~PWM
-#define pin_L2 6 //~PWM
 
-#define pin_far A5 //DIGITAL
-#define pin_korna A4 //DIGITAL
+RF24 radio(7,8); // CE, CSN
+char giden_komut[32];
 
-//MESAFE ÖLÇÜM BİLDİRİMLERİ
-int pin_mesafe_trig = 2;
-int pin_mesafe_echo = 4;
-#define yakinlik_siniri  10   // araba bu cm cinsinden degerden  daha yakın cisim algılarsa dursun
-#define pin_far A5 // DIGITAL
-#define pin_korna A4 // DIGITAL
-long zaman;
-long mesafe;
-unsigned long baslangic_zamani_millis=0;;
-unsigned long baslangic_zamani_micros=0;;
-// const unsigned long okumaAraligi = 1; // Okuma aralığı (milisaniye cinsinden)
-bool trigDurumu = false;
-
-
-#include "araba_kutuphane.h"
-
-RF24 radio(7,8); // CE, CSN pimleri
-
-signed short rightSpeed=0;
-signed short leftSpeed=0;
-uint8_t far_durum=0;
-uint8_t korna_durum=0;
-char buff[10];
-char gelen_komut[32] = "";
-
-
+  #define pin_far 2
+  #define pin_korna 4
+  #define pin_gaz_sag A0
+  #define pin_gaz_sol A1
+  
+  signed short rightSpeed=0;
+  signed short leftSpeed=0;
+  uint8_t far_durum=0;
+  uint8_t korna_durum=0; 
+  int  get_potans( unsigned short read, unsigned short frw_max, unsigned short frw_min, unsigned short bck_min,unsigned short bck_max);
 void setup() {
   
-  pinMode(pin_mesafe_trig, OUTPUT);
-  pinMode(pin_mesafe_echo, INPUT);
+  pinMode( pin_far , INPUT_PULLUP );
+  pinMode( pin_korna , INPUT_PULLUP );
+  pinMode( pin_gaz_sag , INPUT );
+  pinMode( pin_gaz_sol , INPUT );
 
-  pinMode( pin_far, OUTPUT);
-  pinMode( pin_korna , OUTPUT);
-  pinMode( pin_R1 , OUTPUT);
-  pinMode( pin_R2 , OUTPUT);
-  pinMode( pin_L1 , OUTPUT);
-  pinMode( pin_L2 , OUTPUT);
-
-  Serial.begin(9600);
   radio.begin();
-  radio.openReadingPipe(1, 0xF0F0F0F0E12E); // Vericinin yazma hattı adresi
-  radio.startListening();
-  all_stop();
+  Serial.begin(9600);
+  radio.openWritingPipe(0xF0F0F0F0E12E);
+  radio.setPALevel(RF24_PA_MIN); // en düşük seviye enerji tüketimi , düşük sinyal menzili
+  radio.stopListening();//verici  modunda çalış. 
 }
 
 void loop() {
- 
-//RADYO İLETİŞİM
-  if (radio.available()) {
-    
-    radio.read(&gelen_komut, sizeof(gelen_komut));
-    Serial.print("araba:");
-    // Serial.println(gelen_komut);
-    
-    strcpy( buff , strtok( gelen_komut,  "," ) );
-    leftSpeed= atoi(buff);
-    
 
-    strcpy( buff , strtok(NULL,  "," ) );
-    rightSpeed= atoi(buff);
+  rightSpeed = get_potans(  analogRead( pin_gaz_sag )  , 730, 455,304,0 );
+  leftSpeed = get_potans(  analogRead( pin_gaz_sol )  , 755, 508,260,150 );
+  
+  far_durum = !digitalRead( pin_far ); 
+  korna_durum = !digitalRead( pin_korna ); 
 
+  sprintf( giden_komut , "%d,%d,%d,%d", leftSpeed ,rightSpeed, far_durum , korna_durum );
 
-    strcpy( buff , strtok(NULL,  "," ) );
-    far_durum= atoi(buff);
-    
-    strcpy( buff , strtok(NULL,  "," ) );
-    korna_durum= atoi(buff);
-    
-    mesafe= mesafe_olc();
-
-    Serial.print(mesafe);
-     Serial.print(" cm--:\n");
-   
-    if( mesafe < yakinlik_siniri ){
-      alarm( mesafe );
-      all_stop();
-      delay(50);
-    }else {
-      run_left(leftSpeed);
-      run_right(rightSpeed);
-      digitalWrite(pin_far,far_durum);
-      digitalWrite(pin_korna, korna_durum);
-    }
-
-  } else   all_stop();
+  radio.write(&giden_komut , sizeof(giden_komut));
+  Serial.print ( analogRead( pin_gaz_sol ));
+  Serial.print ( "-" );
+  Serial.print ( analogRead( pin_gaz_sag ));
+  Serial.print("--Kumanda:");
+  Serial.println(giden_komut);
+  //delay(20);
 }
+
+
+  int get_potans( unsigned short read, unsigned short frw_max, unsigned short frw_min, unsigned short bck_min,unsigned short bck_max){
+            signed short speed=0;
+            if(read>frw_max) speed=255;
+            else if(  read <= frw_max && read >=  frw_min ) speed=map( read , frw_min, frw_max, 0 ,255 );
+            else if(  read <  frw_min && read >   bck_min ) speed=0;
+            else if(  read <= bck_min && read >=  bck_max ) speed=map( read , bck_min, bck_max, 0 ,-255 );
+            else if(  read <  bck_max ) speed=-255;
+            return speed;
+  }
